@@ -186,11 +186,11 @@ while [[ $RETRY_COUNT -lt $MAX_RETRY_COUNT ]]; do
     # Check individual sub-containers
     for CONTAINER in "${CONTAINERS[@]}"; do
         if ! is_container_running "$CONTAINER"; then
-        log_message "Sub-container $CONTAINER is not running. Starting it..."
+        log_message "$CONTAINER is not running. Starting it..."
         docker_command start "$CONTAINER"
         wait_for_container "$CONTAINER"
         else
-            log_message "Sub-container $CONTAINER is already running but. Restarting it..."
+            log_message "$CONTAINER is already running but. Restarting it..."
             docker_command restart "$CONTAINER"
             wait_for_container "$CONTAINER"
         fi
@@ -201,7 +201,7 @@ done
 
         # Check if the site is up again after waiting
         if check_URL_is_up; then
-            log_message "VPN Container and sub-containers are UP."
+            log_message "VPN Container and sub containers is UP."
             log_message "Identified containers: $(get_sub_containers | tr '\n' ', ')"
             fetch_and_print_ip_info
             exit 0
