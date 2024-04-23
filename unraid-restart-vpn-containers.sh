@@ -129,26 +129,24 @@ check_vpn_container() {
 
 # Function to manage sub-containers
 manage_sub_containers() {
-    local success=0 # Use 0 for true/success and 1 for false/failure
+    local success=true # Use 0 for true/success and 1 for false/failure
     CONTAINERS=($(get_sub_containers))
     for CONTAINER in "${CONTAINERS[@]}"; do
-        # Check if the container is running and manage it accordingly
-        CONTAINER_STATUS=$(docker inspect --format '{{.State.Running}}' "$CONTAINER")
-        if [[ "$CONTAINER_STATUS" == "1" ]]; then
+        CONTAINER_STATUS=$(docker inspect --format '{{.State.Status}}' "$CONTAINER")
+        if [[ "$CONTAINER_STATUS" != "running" ]]; then
             log_message "Starting stopped container: $CONTAINER..."
             if ! docker_command start "$CONTAINER"; then
-                success=1
+                success=false
                 break
             fi
-            wait_for_container "$CONTAINER"
         else
             log_message "Restarting running container: $CONTAINER..."
             if ! docker_command restart "$CONTAINER"; then
-                success=1
+                success=false
                 break
             fi
-            wait_for_container "$CONTAINER"
         fi
+        wait_for_container "$CONTAINER"
     done
     return $success
 }
@@ -178,6 +176,7 @@ while [[ $RETRY_COUNT -lt $MAX_RETRY_COUNT ]]; do
         if ! manage_sub_containers; then
             log_message "Failed to start/restart one or more sub-containers. Restarting VPN container..."
             restart_vpn_container
+            sleep 7
             # Ensure all sub-containers are managed after VPN container restart
             if ! manage_sub_containers; then
                 log_message "VPN Container restarted due to failed start/restart of sub containers. Trying to restart sub containers again..."
