@@ -172,25 +172,29 @@ while [[ $RETRY_COUNT -lt $MAX_RETRY_COUNT ]]; do
         # Check and restart the VPN container if necessary
         check_vpn_container
 
-        # Manage sub-containers
+    # Manage sub-containers
+    if ! manage_sub_containers; then
+        log_message "Failed to start/restart one or more sub-containers. Restarting VPN container..."
+        restart_vpn_container
+        sleep 7
+        # Ensure all sub-containers are managed after VPN container restart
         if ! manage_sub_containers; then
-            log_message "Failed to start/restart one or more sub-containers. Restarting VPN container..."
-            restart_vpn_container
-            sleep 7
-            # Ensure all sub-containers are managed after VPN container restart
-            if ! manage_sub_containers; then
-                log_message "VPN Container restarted due to failed start/restart of sub containers. Trying to restart sub containers again..."
+            log_message "VPN Container restarted due to failed start/restart of sub containers. Trying to restart sub containers again..."
             fi
         fi
 
-        # Check individual sub-containers
-        for CONTAINER in "${CONTAINERS[@]}"; do
-            if ! is_container_running "$CONTAINER"; then
-                log_message "Sub-container $CONTAINER is not running. Starting it..."
-                docker_command start "$CONTAINER"
-                wait_for_container "$CONTAINER"
-            fi
-        done
+    # Check individual sub-containers
+    for CONTAINER in "${CONTAINERS[@]}"; do
+        if ! is_container_running "$CONTAINER"; then
+        log_message "Sub-container $CONTAINER is not running. Starting it..."
+        docker_command start "$CONTAINER"
+        wait_for_container "$CONTAINER"
+        else
+            log_message "Sub-container $CONTAINER is already running but. Restarting it..."
+            docker_command restart "$CONTAINER"
+            wait_for_container "$CONTAINER"
+        fi
+done
 
         log_message "Waiting a moment to allow containers to start up properly..."
         sleep $SLEEP_TIME
