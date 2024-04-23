@@ -1,4 +1,4 @@
-This script monitors a VPN container and its associated sub-containers. It checks if a specified URL is up, and if not, it attempts to restart the VPN container and any sub-containers that are part of the VPN network.
+This script monitors a VPN container and its associated sub-containers. It checks if a specified URL is up, and if not, it attempts to restart the VPN container (if needed) and any sub-containers that are part of the VPN network.
 The script uses Docker labels to identify sub-containers that are associated with the VPN. It logs all actions taken and is designed to be fault-tolerant, handling cases where sub-containers may crash and receive new container IDs.
 
 To use this script, ensure that all sub-containers are created with a specific label that marks them as part of the VPN network. For example, use '--label vpn_network=true' when running 'docker run' to create a container. This label will be used by the script to identify and manage the appropriate containers.
